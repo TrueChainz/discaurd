@@ -32,8 +32,8 @@ const Register = () => {
 
   return (
     <div class="flex justify-center h-screen bg-screen text-gray-400">
-      <div class="my-auto  w-96 rounded-lg bg-black bg-opacity-20 pb-4">
-        <h1 class="text-2xl my-8 text-center font-bold">Register</h1>
+      <div class="my-auto w-96 rounded-lg bg-black bg-opacity-20 p-4  py-6">
+        <h1 class="text-2xl my-6 text-center font-bold">Register</h1>
         <Form of={registerForm} class="py-2" onSubmit={handleSubmit}>
           <Field of={registerForm} name="username">
             {(field) => {
@@ -87,8 +87,10 @@ const Register = () => {
             >
               Register
             </button>
-            <span class="text-red-700 h-6 w-fit mx-auto">{formError()}</span>
-            <p class="mt-7 text-xs mb-1 mx-auto">Already have an account?</p>
+            <span class="text-red-700 text-center w-full my-4 mx-auto break-words">
+              {formError()}
+            </span>
+            <p class="text-xs my-1 mx-auto">Already have an account?</p>
             <button
               type="button"
               class="bg-slate-600 rounded-md"
