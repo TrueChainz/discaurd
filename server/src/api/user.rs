@@ -57,7 +57,7 @@ async fn register(data: web::Json<RegisterRequest>) -> impl Responder {
         }
         Err(err) => {
             let response = RegisterResponse {
-                status: 404,
+                status: 400,
                 error_message: err,
                 user_session: None,
             };
@@ -87,11 +87,11 @@ async fn login(data: web::Json<LoginRequest>) -> impl Responder {
         }
         Err(err) => {
             let response = RegisterResponse {
-                status: 201,
+                status: 404,
                 error_message: err,
                 user_session: None,
             };
-            return HttpResponse::BadRequest().json(json!(response));
+            return HttpResponse::NotFound().json(json!(response));
         }
     }
 }
