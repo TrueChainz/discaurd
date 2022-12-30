@@ -3,7 +3,7 @@ use serde::Deserialize;
 use serde::Serialize;
 use uuid::Uuid;
 
-use crate::{db, helper::hash_verify, tables::generate_token};
+use crate::{db, helper::hash_verify};
 use crate::{
     helper::hash_string,
     tables::{User, UserBody, UserSession},
@@ -35,6 +35,7 @@ pub struct Login {
 pub struct UserClaims {
     pub id: String,
     pub username: String,
+    pub exp: usize,
 }
 
 impl Handler<Register> for UserActor {
@@ -62,13 +63,10 @@ impl Handler<Register> for UserActor {
             return Err("Failed to add user".to_string());
         }
 
-        let token_claims = UserClaims {
-            id: body.id.to_string(),
-            username: body.username,
+        match user.create_session() {
+            Ok(session) => return Ok(session),
+            Err(_err) => return Err("Unexpected error occured".to_string()),
         };
-        let user_session = generate_token(token_claims).unwrap();
-
-        return Ok(user_session);
     }
 }
 
@@ -92,13 +90,9 @@ impl Handler<Login> for UserActor {
             return Err("Username and password do not match".to_string());
         }
 
-        let token_claims = UserClaims {
-            id: body.id.to_string(),
-            username: body.username.to_string(),
-        };
-
-        let user_session = generate_token(token_claims).unwrap();
-
-        return Ok(user_session);
+        match user.create_session() {
+            Ok(session) => return Ok(session),
+            Err(_err) => return Err("Unexpected error occured".to_string()),
+        }
     }
 }

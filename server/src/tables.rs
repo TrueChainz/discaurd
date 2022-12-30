@@ -1,9 +1,15 @@
-use jsonwebtoken::{encode, EncodingKey, Header};
+use std::ops::Add;
+
+use chrono::{Duration, Utc};
 use mysql::{params, prelude::*, PooledConn};
 use redis::Commands;
 use serde::{Deserialize, Serialize};
 
-use crate::{actors::user_actor::UserClaims, db};
+use crate::{
+    actors::user_actor::UserClaims,
+    db,
+    helper::{generate_token, TokenType},
+};
 
 #[derive(Debug)]
 pub struct UserBody {
@@ -83,36 +89,38 @@ impl User {
             return false;
         };
 
+        self.body = Some(UserBody {
+            id: data.id.to_string(),
+            username: data.username.to_string(),
+            email: data.email.to_string(),
+            password: data.password.to_string(),
+        });
         return true;
     }
-}
+    pub fn create_session(self) -> Result<UserSession, String> {
+        let mut redis_conn = db::redis_connect();
+        if self.body.is_none() {
+            return Err("User has does not exist".to_string());
+        }
 
-pub fn generate_token(token_claims: UserClaims) -> Result<UserSession, String> {
-    let mut redis_conn = db::redis_connect();
-    let access_token = match encode(
-        &Header::default(),
-        &token_claims,
-        &EncodingKey::from_secret("access_token_key".as_ref()),
-    ) {
-        Ok(token) => token,
-        Err(_err) => return Err("Failed generating access".to_string()),
-    };
-    let refresh_token = match encode(
-        &Header::default(),
-        &token_claims,
-        &EncodingKey::from_secret("refresh_token_key".as_ref()),
-    ) {
-        Ok(token) => token,
-        Err(_err) => return Err("Failed generating refresh".to_string()),
-    };
-    let _: () = redis_conn
-        .set(token_claims.id.as_str(), &refresh_token)
-        .unwrap();
+        let body = self.body.unwrap();
+        let token_claims = UserClaims {
+            id: body.id,
+            username: body.username,
+            exp: Utc::now().add(Duration::minutes(30)).timestamp() as usize,
+        };
+        let access_token = generate_token(&token_claims, TokenType::AccessToken);
+        let refresh_token = generate_token(&token_claims, TokenType::RefreshToken);
 
-    let user_session = UserSession {
-        access_token,
-        refresh_token,
-    };
+        redis_conn
+            .set::<_, _, ()>(token_claims.id.as_str(), &refresh_token)
+            .unwrap();
 
-    return Ok(user_session);
+        let user_session = UserSession {
+            access_token,
+            refresh_token,
+        };
+
+        return Ok(user_session);
+    }
 }
