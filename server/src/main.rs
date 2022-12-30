@@ -1,4 +1,5 @@
-use actix_web::{App, HttpServer};
+use actix_cors::Cors;
+use actix_web::{http, middleware, App, HttpServer};
 use api::api_config;
 use dotenv::dotenv;
 
@@ -11,8 +12,23 @@ mod tables;
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv().expect("Failed to read .env file");
-    HttpServer::new(move || App::new().configure(api_config))
-        .bind(("127.0.0.1", 3000))?
-        .run()
-        .await
+
+    HttpServer::new(move || {
+        let cors = Cors::default()
+            .allowed_origin("http://localhost:1420")
+            .allowed_methods(vec!["GET", "POST", "PUT"])
+            .allowed_headers(vec![
+                http::header::AUTHORIZATION,
+                http::header::ACCEPT,
+                http::header::CONTENT_TYPE,
+            ])
+            .max_age(3600);
+        App::new()
+            .wrap(middleware::Compress::default())
+            .wrap(cors)
+            .configure(api_config)
+    })
+    .bind(("127.0.0.1", 3000))?
+    .run()
+    .await
 }
