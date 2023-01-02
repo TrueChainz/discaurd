@@ -1,9 +1,10 @@
 use crate::{
     actors::user_actor::{Login, Register, UserActor},
+    helper::{validate_token, TokenType},
     tables::UserSession,
 };
 use actix::Actor;
-use actix_web::{post, put, web, HttpResponse, Responder};
+use actix_web::{get, post, put, web, HttpRequest, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -96,6 +97,34 @@ async fn login(data: web::Json<LoginRequest>) -> impl Responder {
     }
 }
 
+#[get("/authenticate")]
+async fn authenticate(request: HttpRequest) -> impl Responder {
+    let headers = request.headers();
+    let authorization = headers.get("authorization");
+
+    let value = match authorization {
+        Some(value) => value,
+        None => return HttpResponse::Unauthorized(),
+    };
+
+    let token_list = value.to_str().unwrap().split(" ").collect::<Vec<&str>>();
+    let token_option = token_list.get(1);
+
+    let token = match token_option {
+        Some(token) => token.to_string(),
+        None => return HttpResponse::Unauthorized(),
+    };
+    match validate_token(token, TokenType::AccessToken) {
+        true => return HttpResponse::Ok(),
+        false => return HttpResponse::Unauthorized(),
+    }
+}
+
 pub fn user_config(cfg: &mut web::ServiceConfig) {
-    cfg.service(web::scope("/user").service(register).service(login));
+    cfg.service(
+        web::scope("/user")
+            .service(register)
+            .service(login)
+            .service(authenticate),
+    );
 }

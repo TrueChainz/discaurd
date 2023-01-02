@@ -31,6 +31,13 @@ pub struct Login {
     pub password: String,
 }
 
+#[derive(Message)]
+#[rtype(result = "Result<UserSession, String>")]
+pub struct ValidateRefresh {
+    pub refresh_token: String,
+    pub username: String,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserClaims {
     pub id: String,
@@ -79,7 +86,7 @@ impl Handler<Login> for UserActor {
             sql_conn,
         };
 
-        let body = match user.new(msg.username) {
+        let body = match user.get(msg.username) {
             Some(data) => data,
             None => return Err("Username does not exist".to_string()),
         };
@@ -90,6 +97,24 @@ impl Handler<Login> for UserActor {
             return Err("Username and password do not match".to_string());
         }
 
+        match user.create_session() {
+            Ok(session) => return Ok(session),
+            Err(_err) => return Err("Unexpected error occured".to_string()),
+        }
+    }
+}
+
+impl Handler<ValidateRefresh> for UserActor {
+    type Result = Result<UserSession, String>;
+    fn handle(&mut self, msg: ValidateRefresh, _ctx: &mut Context<Self>) -> Self::Result {
+        let user = User::create(msg.username);
+        if user.body.is_none() {
+            return Err("User does not exists".to_string());
+        }
+        let valid_token = user.validate_session_token(msg.refresh_token);
+        if valid_token == false {
+            return Err("Token does not exist in session".to_string());
+        }
         match user.create_session() {
             Ok(session) => return Ok(session),
             Err(_err) => return Err("Unexpected error occured".to_string()),
