@@ -63,7 +63,10 @@
         "height": 600,
         "resizable": true,
         "title": "Discaurd",
-        "width": 800
+        "width": 800,
+        "min-width": 200,
+        "min-height": 200
+
       }
     ]
   }
