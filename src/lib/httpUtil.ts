@@ -36,5 +36,37 @@ export async function authenticate(credentials: TCredentials): Promise<TUser> {
     }
     throw new Error(error.response.data.error_message);
   }
-  return null;
+}
+
+export interface TRegisterUser {
+  username: string;
+  password: string;
+  email: string;
+}
+
+export async function register(data: TRegisterUser): Promise<TUser> {
+  try {
+    let response = await axiosInstance
+      .post("http://127.0.0.1:3000/api/user/register", {
+        email: data.email,
+        username: data.username,
+        password: data.password,
+      })
+      .then((response) => {
+        return response.data;
+      });
+
+    console.log("REGISTERING USER", response);
+    if (response.status != "201")
+      throw new Error("Unexpected error! Please try again later.");
+
+    return response.user;
+  } catch (error) {
+    console.log(error);
+    if (!error.response) {
+      throw new Error("Unexpected error! Please try again later.");
+    }
+    console.log(error.response.data.error_message);
+    throw new Error(error.response.data.error_message);
+  }
 }
