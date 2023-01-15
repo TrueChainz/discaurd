@@ -38,13 +38,6 @@ pub struct ValidateRefresh {
     pub username: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct UserClaims {
-    pub id: String,
-    pub username: String,
-    pub exp: usize,
-}
-
 impl Handler<Register> for UserActor {
     type Result = Result<UserSession, String>;
     fn handle(&mut self, msg: Register, _ctx: &mut Context<Self>) -> Self::Result {

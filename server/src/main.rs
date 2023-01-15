@@ -7,12 +7,17 @@ mod actors;
 mod api;
 mod db;
 mod helper;
+mod prisma;
+mod services;
 mod tables;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv().expect("Failed to read .env file");
-
+    let client = db::create_client().await;
+    if client.is_err() {
+        panic!("Failed to connect to prisma client");
+    }
     HttpServer::new(move || {
         let cors = Cors::default()
             .allowed_origin("http://localhost:1420")

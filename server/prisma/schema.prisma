@@ -1,0 +1,27 @@
+generator client {
+  provider = "cargo prisma"
+  output   = "../src/prisma.rs"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Friends {
+  id           String   @id
+  user_id      String
+  // user         Users    @relation(fields: [user_id], onDelete: Cascade, references: [id])
+  friend_id    String
+  status       String
+  submitted_at DateTime
+  updated_at   DateTime
+}
+
+model Users {
+  id       String @id
+  username String @unique
+  email    String @unique
+  password String
+  // friends  Friends[]
+}
