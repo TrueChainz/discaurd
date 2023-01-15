@@ -45,9 +45,9 @@ function Login() {
   };
 
   return (
-    <div className="flex justify-center h-screen bg-screen text-gray-400">
-      <div className="my-auto w-96 rounded-lg bg-black bg-opacity-20 p-4  py-6">
-        <h1 className="text-2xl my-6 text-center font-bold">Login</h1>
+    <div className="bg-screen flex h-screen justify-center text-gray-400">
+      <div className="my-auto w-96 rounded-lg bg-black bg-opacity-20 p-4 py-6 outline outline-base-300">
+        <h1 className="my-6 text-center text-2xl font-bold">Login</h1>
         <form onSubmit={handleSubmit(onSubmit)}>
           <Controller
             name="username"
@@ -83,20 +83,24 @@ function Login() {
               );
             }}
           />
-          <div className="flex flex-col mx-auto w-48 mt-4">
+          <div className="mx-auto mt-4 flex w-48 flex-col">
             <button
-              className="bg-slate-600 rounded-md"
+              className="btn-accent btn-sm btn mx-auto w-1/2 rounded-md"
               type="submit"
               onClick={() => setFormError("")}
             >
               Login
             </button>
-            <span className="text-red-700 text-center w-full my-4 mx-auto break-words">
+            <div className="min-h-6 my-2 mx-auto w-full break-words text-center text-red-700">
               {formError}
-            </span>
-            <p className="text-xs my-1 mx-auto">Don't have an account?</p>
-            <button type="button" className="bg-slate-600 rounded-md">
-              <a href="/auth/register">Register</a>
+            </div>
+            <p className="my-1 mx-auto text-xs">Don't have an account?</p>
+            <button
+              type="button"
+              className="btn-outline btn-accent  btn-sm btn mx-auto w-1/2 rounded-md bg-base-300"
+              onClick={() => router.push("/auth/register")}
+            >
+              Register
             </button>
           </div>
         </form>

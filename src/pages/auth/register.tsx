@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { invoke } from "@tauri-apps/api/tauri";
 import { useForm, Controller, SubmitHandler } from "react-hook-form";
 import { signIn, useSession } from "next-auth/react";
 import TextInput from "../../components/TextInput";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/dist/client/router";
-import axios from "axios";
+import { register, TRegisterUser } from "../../lib/httpUtil";
 
 const FormSchema = z.object({
   username: z.string().min(8, "Username must contain at least 8 character(s)"),
@@ -39,40 +38,26 @@ function Register() {
   const onSubmit: SubmitHandler<FormSchemaType> = async (data, e) => {
     e.preventDefault();
     try {
-      await axios
-        .post("http://127.0.0.1:3000/api/user/register", {
-          email: data.email,
-          username: data.username,
-          password: data.password,
-        })
-        .then((response) => {
-          return response.data;
-        })
-        .catch((error) => {
-          throw new Error(error.response.data.message);
-        });
-      console.log(data, "MMMH");
-      const response = await signIn("credentials", {
+      const registerRespone = await register(data as TRegisterUser);
+      const signInResponse = await signIn("credentials", {
         redirect: false,
-        username: data.username,
+        username: registerRespone.username,
         password: data.password,
       });
-      console.log(response);
 
-      if (response.ok) {
+      if (signInResponse.ok) {
         return router.push("/");
       }
-
-      setFormError(response.error);
+      setFormError(signInResponse.error);
     } catch (err) {
-      setFormError(err);
+      setFormError(err.message);
     }
   };
 
   return (
-    <div className="flex justify-center h-screen bg-screen text-gray-400">
-      <div className="my-auto w-96 rounded-lg bg-black bg-opacity-20 p-4  py-6">
-        <h1 className="text-2xl my-6 text-center font-bold">Register</h1>
+    <div className="bg-screen flex h-screen justify-center text-gray-400">
+      <div className="my-auto w-96 rounded-lg bg-black bg-opacity-20 p-4 py-6 outline outline-base-300">
+        <h1 className="my-6 text-center text-2xl font-bold">Register</h1>
         <form onSubmit={handleSubmit(onSubmit)}>
           <Controller
             name="username"
@@ -125,20 +110,24 @@ function Register() {
               );
             }}
           />
-          <div className="flex flex-col mx-auto w-48 mt-4">
+          <div className="mx-auto mt-4 flex w-48 flex-col">
             <button
-              className="bg-slate-600 rounded-md"
+              className=" btn-accent btn-sm btn mx-auto w-1/2 rounded-md"
               type="submit"
               onClick={() => setFormError("")}
             >
               Register
             </button>
-            <span className="text-red-700 text-center w-full my-4 mx-auto break-words">
+            <div className="min-h-6 my-2 mx-auto w-full break-words text-center text-red-700">
               {formError}
-            </span>
-            <p className="text-xs my-1 mx-auto">Already have an account?</p>
-            <button type="button" className="bg-slate-600 rounded-md">
-              <a onClick={() => signIn()}>Login</a>
+            </div>
+            <p className="my-1 mx-auto text-xs">Already have an account?</p>
+            <button
+              type="button"
+              className="btn-outline btn-accent btn-sm btn mx-auto w-1/2 rounded-md bg-base-300 "
+              onClick={() => signIn()}
+            >
+              Login
             </button>
           </div>
         </form>
