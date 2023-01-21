@@ -7,9 +7,9 @@ mod actors;
 mod api;
 mod db;
 mod helper;
+mod models;
 mod prisma;
 mod services;
-mod tables;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {

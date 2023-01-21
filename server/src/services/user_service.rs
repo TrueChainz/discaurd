@@ -4,7 +4,7 @@ use uuid::Uuid;
 use crate::{
     db,
     helper::{hash_string, hash_verify},
-    tables::{User, UserBody},
+    models::user_model::{User, UserBody},
 };
 
 pub struct LoginUser {
