@@ -14,7 +14,7 @@ struct RegisterRequest {
 
 #[derive(Deserialize, Serialize, Debug)]
 struct RegisterResponse {
-    status: u16,
+    success: bool,
     error_message: String,
     user: Option<UserInfo>,
 }
@@ -27,7 +27,7 @@ struct LoginRequest {
 
 #[derive(Deserialize, Serialize, Debug)]
 struct LoginResponse {
-    status: u16,
+    success: bool,
     error_message: String,
     user: Option<UserInfo>,
 }
@@ -45,7 +45,7 @@ async fn register(data: web::Json<RegisterRequest>) -> impl Responder {
     match register_result {
         Ok(user_info) => {
             let response = RegisterResponse {
-                status: 201,
+                success: true,
                 error_message: "".to_string(),
                 user: Some(user_info),
             };
@@ -53,7 +53,7 @@ async fn register(data: web::Json<RegisterRequest>) -> impl Responder {
         }
         Err(err) => {
             let response = RegisterResponse {
-                status: 400,
+                success: false,
                 error_message: err,
                 user: None,
             };
@@ -74,7 +74,7 @@ async fn login(data: web::Json<LoginRequest>) -> impl Responder {
     match login_result {
         Ok(user_info) => {
             let response = LoginResponse {
-                status: 201,
+                success: true,
                 error_message: "".to_string(),
                 user: Some(user_info),
             };
@@ -82,7 +82,7 @@ async fn login(data: web::Json<LoginRequest>) -> impl Responder {
         }
         Err(err) => {
             let response = LoginResponse {
-                status: 404,
+                success: false,
                 error_message: err,
                 user: None,
             };

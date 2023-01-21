@@ -9,13 +9,11 @@ datasource db {
 }
 
 model Friends {
-  id           String   @id
+  id           String       @id
   user_id      String
-  // user         Users    @relation(fields: [user_id], onDelete: Cascade, references: [id])
   friend_id    String
-  status       String
-  submitted_at DateTime
-  updated_at   DateTime
+  status       FriendStatus @default(PENDING)
+  submitted_at DateTime     @default(now())
 }
 
 model Users {
@@ -23,5 +21,10 @@ model Users {
   username String @unique
   email    String @unique
   password String
-  // friends  Friends[]
+}
+
+enum FriendStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
 }

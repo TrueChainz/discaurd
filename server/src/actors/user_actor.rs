@@ -100,7 +100,7 @@ impl Handler<Login> for UserActor {
 impl Handler<ValidateRefresh> for UserActor {
     type Result = Result<UserSession, String>;
     fn handle(&mut self, msg: ValidateRefresh, _ctx: &mut Context<Self>) -> Self::Result {
-        let user = User::create(msg.username);
+        let user = User::get_user_by_username(msg.username);
         if user.body.is_none() {
             return Err("User does not exists".to_string());
         }

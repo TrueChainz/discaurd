@@ -1,10 +1,5 @@
-use chrono::Utc;
-use redis::Commands;
-use serde::{Deserialize, Serialize};
-
 use crate::{
     db,
-    helper::TokenType,
     prisma::{users, PrismaClient},
 };
 
@@ -23,21 +18,54 @@ pub struct User {
 }
 
 impl User {
-    pub async fn create(username: String) -> Self {
+    pub async fn get_user_by_id(id: String) -> Self {
         let client = db::create_client().await.unwrap();
-        // let result_body = conn.exec_first::<UserBody, _, _>(
-        //     "SELECT * FROM users WHERE username = :username",
-        //     params! {"username" => &username},
-        // );
-        // if result_body.is_err() {
-        //     return User {
-        //         body: None,
-        //         client: conn,
-        //     };
-        // }
-        // let body = result_body.unwrap();
+        let body = client
+            .users()
+            .find_unique(users::id::equals(id))
+            .exec()
+            .await;
+        if (body.is_err()) {
+            return User { body: None, client };
+        }
+        let user_body = match body.unwrap() {
+            Some(data) => Some(UserBody {
+                id: data.id,
+                username: data.username,
+                email: data.email,
+                password: data.password,
+            }),
+            None => None,
+        };
 
-        return User { body: None, client };
+        return User {
+            body: user_body,
+            client,
+        };
+    }
+    pub async fn get_user_by_username(username: String) -> Self {
+        let client = db::create_client().await.unwrap();
+        let body = client
+            .users()
+            .find_unique(users::username::equals(username))
+            .exec()
+            .await
+            .unwrap();
+
+        let user_body = match body {
+            Some(data) => Some(UserBody {
+                id: data.id,
+                username: data.username,
+                email: data.email,
+                password: data.password,
+            }),
+            None => None,
+        };
+
+        return User {
+            body: user_body,
+            client,
+        };
     }
     pub async fn get(&mut self, username: String) -> Option<&UserBody> {
         match self
