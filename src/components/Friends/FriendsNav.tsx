@@ -3,7 +3,7 @@ import { cva } from "class-variance-authority";
 import { FaUserFriends } from "react-icons/fa";
 import dynamic from "next/dynamic";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 const AddFriendModal = dynamic(() => import("../AddFriendModal"), {
   ssr: false,
 });
@@ -30,6 +30,8 @@ function FriendsNav() {
   const [activeNav, setActiveNav] = useState("Online");
   const [modalActive, setModalActive] = useState(false);
   const [parent] = useAutoAnimate(/* optional config */);
+  const { data: session } = useSession();
+
   return (
     <div className="flex-1 lg:flex" ref={parent as LegacyRef<HTMLDivElement>}>
       <ul
@@ -62,7 +64,10 @@ function FriendsNav() {
         </label>
       </ul>
       {modalActive === true && (
-        <AddFriendModal setModalActive={setModalActive} />
+        <AddFriendModal
+          setModalActive={setModalActive}
+          username={session.user.username}
+        />
       )}
       <ul className="ml-auto ">
         <li

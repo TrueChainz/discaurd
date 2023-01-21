@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { authenticate } from "../../../lib/httpUtil";
+import { authenticate } from "../../../lib/services";
 
 interface User {
   header: number;
