@@ -69,8 +69,6 @@ function App() {
       <section className="w-full flex-1">
         <Friends />
       </section>
-
-      {/* Put this part before </body> tag */}
     </div>
   );
 }

@@ -5,7 +5,7 @@ import TextInput from "../../components/TextInput";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/dist/client/router";
-import { register, TRegisterUser } from "../../lib/httpUtil";
+import { register, TRegisterUser } from "../../lib/services";
 
 const FormSchema = z.object({
   username: z.string().min(8, "Username must contain at least 8 character(s)"),
