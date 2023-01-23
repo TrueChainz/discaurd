@@ -2,7 +2,7 @@ use actix_web::{get, post, web, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use crate::services::friend_service::{add_friend, show_pending, AddFriendPayload, FriendData};
+use crate::services::friend_service::{add_friend, show_pending, FriendData};
 
 #[derive(Deserialize, Serialize, Debug)]
 struct AddFriendRequest {
@@ -18,11 +18,7 @@ struct AddFriendResponse {
 
 #[post("/add")]
 async fn add(data: web::Json<AddFriendRequest>) -> impl Responder {
-    let add_friend_result = add_friend(AddFriendPayload {
-        source_username: data.0.source_username,
-        target_username: data.0.target_username,
-    })
-    .await;
+    let add_friend_result = add_friend(data.0.source_username, data.0.target_username).await;
     println!("{:?}", add_friend_result);
     match add_friend_result {
         Ok(()) => {

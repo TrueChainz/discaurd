@@ -7,18 +7,14 @@ use crate::{
         user_model::User,
     },
 };
-pub struct AddFriendPayload {
-    pub source_username: String,
-    pub target_username: String,
-}
 
-pub async fn add_friend(data: AddFriendPayload) -> Result<(), String> {
+pub async fn add_friend(source_username: String, target_username: String) -> Result<(), String> {
     let client = db::create_client().await.unwrap();
-    if &data.source_username == &data.target_username {
+    if &source_username == &target_username {
         return Err("Cannot add yourself.".to_string());
     }
-    let user = User::get_user_by_username((&data).source_username.to_string()).await;
-    let target_user = User::get_user_by_username((&data).target_username.to_string()).await;
+    let user = User::get_user_by_username(source_username).await;
+    let target_user = User::get_user_by_username(target_username).await;
 
     if user.body.is_none() {
         return Err("Unexpected error! Please try again later.".to_string());
