@@ -1,3 +1,5 @@
+use prisma_client_rust::or;
+
 use crate::{
     db,
     prisma::{users, PrismaClient},
@@ -25,7 +27,7 @@ impl User {
             .find_unique(users::id::equals(id))
             .exec()
             .await;
-        if (body.is_err()) {
+        if body.is_err() {
             return User { body: None, client };
         }
         let user_body = match body.unwrap() {
@@ -92,7 +94,10 @@ impl User {
         match self
             .client
             .users()
-            .find_unique(users::username::equals(body.username.to_owned()))
+            .find_first(vec![or![
+                users::username::equals(body.username.to_owned()),
+                users::email::equals(body.email.to_owned())
+            ]])
             .exec()
             .await
             .unwrap()
@@ -118,7 +123,7 @@ impl User {
             .exec()
             .await
         {
-            Ok(data) => return true,
+            Ok(_data) => return true,
             _ => return false,
         }
     }
