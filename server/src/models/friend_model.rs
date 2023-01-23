@@ -1,11 +1,8 @@
-use prisma_client_rust::{and, query_core::schema_builder::constants::filters::AND};
+use prisma_client_rust::{and, or};
 
-use crate::{
-    db,
-    prisma::{
-        friends::{self, Data},
-        users, FriendStatus, PrismaClient,
-    },
+use crate::prisma::{
+    friends::{self, Data},
+    FriendStatus, PrismaClient,
 };
 
 #[derive(Debug)]
@@ -49,13 +46,33 @@ impl Friend {
         return self
             .client
             .friends()
-            .find_first(vec![
-                and![friends::user_id::equals((*data.user_id).to_string())],
-                and![friends::friend_id::equals((*data.target_id).to_string())],
+            .find_first(vec![or![
+                and!(
+                    friends::user_id::equals((*data.user_id).to_string()),
+                    friends::friend_id::equals((*data.target_id).to_string()),
+                ),
+                and!(
+                    friends::user_id::equals((*data.target_id).to_string()),
+                    friends::friend_id::equals((*data.user_id).to_string())
+                ),
+            ]])
+            .exec()
+            .await
+            .unwrap();
+    }
+
+    pub async fn get_pending_requests(&self, users_id: String) -> Vec<Data> {
+        let pending_requests = self
+            .client
+            .friends()
+            .find_many(vec![
+                and!(friends::friend_id::equals(users_id)),
+                and!(friends::status::equals(FriendStatus::Pending)),
             ])
             .exec()
             .await
             .unwrap();
+        return pending_requests;
     }
 
     pub async fn send_request(&self, data: &Relation) -> Result<(), String> {
