@@ -68,7 +68,7 @@ async fn pending(data: web::Query<ShowPendingRequest>) -> impl Responder {
                 error_message: "".to_string(),
                 friends: pending_friends,
             };
-            return HttpResponse::Created().json(json!(response));
+            return HttpResponse::Ok().json(json!(response));
         }
         Err(_err) => {
             let response = ShowPendingResponse {
