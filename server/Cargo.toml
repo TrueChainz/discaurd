@@ -3,25 +3,9 @@ name = "server"
 version = "0.1.0"
 edition = "2021"
 
-[workspace]
-members = [
-  "prisma-cli",
-]
-resolver = "2"
-
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[workspace]
+members = [".", "api", "entity"]
 
 [dependencies]
-actix = "0.13.0"
-actix-cors = "0.6.4"
-actix-web = "4.2.1"
-chrono = "0.4.23"
-dotenv = "0.15.0"
-jsonwebtoken = "8.2.0"
-mysql ="23.0.1"
-redis = "0.22.1"
-rust-argon2 = "1.0.0"
-serde = { version="1.0.152", features = ["derive"] }
-serde_json = "1.0.91"
-uuid = { version = "1.2.2", features = [ "v4" ] }
-prisma-client-rust = { git = "https://github.com/Brendonovich/prisma-client-rust", tag = "0.6.3", default-features = false, features = [ "mysql" ] }
+api = { path = "./api" }  

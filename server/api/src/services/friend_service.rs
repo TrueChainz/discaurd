@@ -76,3 +76,41 @@ pub async fn show_pending(username: String) -> Result<Vec<FriendData>, String> {
 
     return Ok(pending_requests_info);
 }
+
+pub async fn accept_request(
+    source_username: String,
+    target_username: String,
+) -> Result<Vec<FriendData>, &'static str> {
+    let client = db::create_client().await.unwrap();
+
+    let user = User::get_user_by_username(source_username).await;
+    let target_user = User::get_user_by_username(target_username).await;
+
+    if user.body.is_none() {
+        return Err("Unexpected error! Please try again later.");
+    }
+
+    if target_user.body.is_none() {
+        return Err("Unexpected error! Please try again later.");
+    }
+
+    let friend = Friend { client };
+
+    let accept_request = friend
+        .accept_request(
+            &Relation {
+                user_id: user.body.as_ref().unwrap().id.to_string(),
+                target_id: target_user.body.unwrap().id,
+            },
+            user.body.as_ref().unwrap().id.to_string(),
+        )
+        .await;
+
+    if accept_request.is_err() {
+        return Err("Unexpected error! Please try again later.");
+    }
+
+    let pending_requests_info: Vec<FriendData> = vec![];
+
+    return Ok(pending_requests_info);
+}

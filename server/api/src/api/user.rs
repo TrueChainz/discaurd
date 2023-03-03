@@ -53,7 +53,7 @@ async fn register(data: web::Json<RegisterRequest>) -> impl Responder {
         Err(err) => {
             let response = RegisterResponse {
                 success: false,
-                error_message: err,
+                error_message: err.to_string(),
                 user: None,
             };
             return HttpResponse::BadRequest().json(json!(response));
@@ -82,7 +82,7 @@ async fn login(data: web::Json<LoginRequest>) -> impl Responder {
         Err(err) => {
             let response = LoginResponse {
                 success: false,
-                error_message: err,
+                error_message: err.to_string(),
                 user: None,
             };
             return HttpResponse::NotFound().json(json!(response));

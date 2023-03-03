@@ -2,7 +2,7 @@ use actix_web::{get, post, web, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use crate::services::friend_service::{add_friend, show_pending, FriendData};
+use crate::services::friend_service::{accept_request, add_friend, show_pending, FriendData};
 
 #[derive(Deserialize, Serialize, Debug)]
 struct AddFriendRequest {
@@ -77,6 +77,40 @@ async fn pending(data: web::Query<ShowPendingRequest>) -> impl Responder {
     }
 }
 
+#[derive(Deserialize, Serialize, Debug)]
+struct AcceptRequest {
+    source_username: String,
+    target_username: String,
+}
+#[post("/accept")]
+async fn accept(data: web::Json<AcceptRequest>) -> impl Responder {
+    let accept_request_result =
+        accept_request(data.0.source_username, data.0.target_username).await;
+    return HttpResponse::NotFound().json(json!({}));
+
+    // let show_pending = show_pending(data.0.username).await;
+    // println!("PENDING FRIENDS: {:#?}", show_pending);
+
+    // match show_pending {
+    //     Ok(pending_friends) => {
+    //         let response = ShowPendingResponse {
+    //             success: true,
+    //             error_message: "".to_string(),
+    //             friends: pending_friends,
+    //         };
+    //         return HttpResponse::Ok().json(json!(response));
+    //     }
+    //     Err(_err) => {
+    //         let response = ShowPendingResponse {
+    //             success: false,
+    //             error_message: "Hm, didn't works. You might not exist!".to_string(),
+    //             friends: vec![],
+    //         };
+    //         return HttpResponse::NotFound().json(json!(response));
+    //     }
+    // }
+}
+
 #[post("/delete")]
 async fn delete(_data: web::Json<AddFriendRequest>) -> impl Responder {
     return HttpResponse::BadRequest().json(json!({}));
@@ -88,5 +122,10 @@ async fn block(_data: web::Json<AddFriendRequest>) -> impl Responder {
 }
 
 pub fn friend_config(cfg: &mut web::ServiceConfig) {
-    cfg.service(web::scope("/friend").service(add).service(pending));
+    cfg.service(
+        web::scope("/friend")
+            .service(add)
+            .service(pending)
+            .service(accept),
+    );
 }

@@ -42,6 +42,18 @@ impl Friend {
             _ => return false,
         }
     }
+    pub async fn update_status(&self, friendship_id: String, status: FriendStatus) -> Data {
+        return self
+            .client
+            .friends()
+            .update(
+                friends::id::equals(friendship_id),
+                vec![friends::status::set(status)],
+            )
+            .exec()
+            .await
+            .unwrap();
+    }
     pub async fn get_status(&self, data: &Relation) -> Option<Data> {
         return self
             .client
@@ -61,12 +73,12 @@ impl Friend {
             .unwrap();
     }
 
-    pub async fn get_pending_requests(&self, users_id: String) -> Vec<Data> {
+    pub async fn get_pending_requests(&self, user_id: String) -> Vec<Data> {
         let pending_requests = self
             .client
             .friends()
             .find_many(vec![
-                and!(friends::friend_id::equals(users_id)),
+                and!(friends::friend_id::equals(user_id)),
                 and!(friends::status::equals(FriendStatus::Pending)),
             ])
             .exec()
@@ -76,7 +88,7 @@ impl Friend {
     }
 
     pub async fn send_request(&self, data: &Relation) -> Result<(), String> {
-        let friendship = self.get_status(&data).await;
+        let friendship = self.get_status(data).await;
         if friendship.is_some() {
             let status = friendship.unwrap().status;
             match status {
@@ -91,5 +103,24 @@ impl Friend {
             return Err("Unexpected Error has occured, please try again later!".to_string());
         }
         return Ok(());
+    }
+    pub async fn accept_request(&self, data: &Relation, user_id: String) -> Result<Data, &str> {
+        if let Some(friendship) = self.get_status(data).await {
+            match friendship.status {
+                FriendStatus::Accepted => return Err("Already your friend"),
+                FriendStatus::Pending => {
+                    if friendship.friend_id == user_id {
+                        let friendship_data = self
+                            .update_status(friendship.id, FriendStatus::Accepted)
+                            .await;
+                        return Ok(friendship_data);
+                    }
+                    return Err("You can't accept for yourself lol");
+                }
+                FriendStatus::Blocked => return Err("User has blocked you!"),
+            }
+        }
+
+        return Err("No status somehow!");
     }
 }
