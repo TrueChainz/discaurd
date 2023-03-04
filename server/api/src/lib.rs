@@ -1,7 +1,6 @@
 use actix_cors::Cors;
 use actix_web::{http, middleware, App, HttpServer};
 use api::api_config;
-use dotenv::dotenv;
 
 pub use sea_orm;
 
@@ -15,11 +14,8 @@ mod services;
 #[actix_web::main]
 async fn start() -> std::io::Result<()> {
     println!("Hello world");
-    dotenv().expect("Failed to read .env file");
-    let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file");
     // let host =: env::var("HOST").expect("HOST is not set in .env file");
     // let port = env::var("PORT").expect("PORT is not set in .env file");
-    let server_url = format!("{db_url}");
 
     HttpServer::new(move || {
         let cors = Cors::default()

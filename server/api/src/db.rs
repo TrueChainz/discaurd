@@ -1,9 +1,13 @@
 // use crate::prisma::{self, PrismaClient};
 // use prisma_client_rust::NewClientError;
+use dotenv::dotenv;
 use sea_orm::{Database, DatabaseConnection, DbErr};
 
 pub async fn create_client() -> Result<DatabaseConnection, DbErr> {
-    let db = Database::connect("mysql://dlfrdozr5hyjxfwzyyjf:pscale_pw_nm7pmhYLccmzYTWVbojGIijIFl9G1WTAkBUZJMtifjn@aws-eu-west-2.connect.psdb.cloud/discaurd?sslaccept=strict").await?;
+    dotenv().expect("Failed to read .env file");
+    let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL is not set in .env file");
+    let server_url = format!("{db_url}");
+    let db = Database::connect(server_url).await?;
 
     return Ok(db);
 }

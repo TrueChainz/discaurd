@@ -40,12 +40,12 @@ impl UserQuery {
             )
             .one(&self.db)
             .await?;
-        if let Some(data) = body {
+        if let Some(_data) = body {
             return Ok(true);
         }
         return Ok(false);
     }
-    pub async fn register(&self, data: &UserBody) -> Result<(), DbErr> {
+    pub async fn register(&self, data: &UserBody) -> Result<Model, DbErr> {
         let mut active_model = users::ActiveModel {
             ..Default::default()
         };
@@ -55,6 +55,6 @@ impl UserQuery {
 
         let body = active_model.insert(&self.db).await?;
 
-        return Ok(());
+        return Ok(body);
     }
 }
