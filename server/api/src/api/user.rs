@@ -39,7 +39,6 @@ async fn register(data: web::Json<RegisterRequest>) -> impl Responder {
         password: data.0.password,
     })
     .await;
-    println!("{:?}", register_result);
 
     match register_result {
         Ok(user_info) => {

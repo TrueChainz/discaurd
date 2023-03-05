@@ -1,41 +1,64 @@
+use anyhow::Result;
+use sea_orm::DbErr;
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
 
 use crate::{
     db,
     models::{
-        friend_model::{Friend, Relation},
-        user_model::User,
+        friend_model::{FriendQuery, Relation},
+        user_model::UserQuery,
     },
 };
 
-pub async fn add_friend(source_username: String, target_username: String) -> Result<(), String> {
-    let client = db::create_client().await.unwrap();
+#[derive(Error, Debug)]
+pub enum FriendServiceError {
+    #[error("Cannot send request")]
+    BadRequest,
+    #[error("No status found")]
+    NoStatus,
+    #[error("User not found")]
+    NotFound,
+    #[error("Unexpected error! Please try again later")]
+    Unexpected,
+    #[error("User has blocked you!")]
+    Blocked,
+    #[error("Database is down")]
+    DatabaseError(DbErr),
+}
+
+pub async fn add_friend(
+    source_username: String,
+    target_username: String,
+) -> Result<(), FriendServiceError> {
+    let db = db::create_client()
+        .await
+        .map_err(FriendServiceError::DatabaseError)?;
+    let user_query = UserQuery { db: db.clone() };
     if &source_username == &target_username {
-        return Err("Cannot add yourself.".to_string());
-    }
-    let user = User::get_user_by_username(source_username).await;
-    let target_user = User::get_user_by_username(target_username).await;
-
-    if user.body.is_none() {
-        return Err("Unexpected error! Please try again later.".to_string());
+        return Err(FriendServiceError::BadRequest);
     }
 
-    if target_user.body.is_none() {
-        return Err("User does not exist!".to_string());
-    }
+    let source_user = user_query
+        .get_by_username(source_username)
+        .await
+        .map_err(FriendServiceError::DatabaseError)?
+        .ok_or(FriendServiceError::Unexpected)?;
+    let target_user = user_query
+        .get_by_username(target_username)
+        .await
+        .map_err(FriendServiceError::DatabaseError)?
+        .ok_or(FriendServiceError::NotFound)?;
 
-    let friend = Friend { client };
-    let response = friend
+    let friend_query = FriendQuery { db: db.clone() };
+    let response = friend_query
         .send_request(&Relation {
-            user_id: user.body.unwrap().id,
-            target_id: target_user.body.unwrap().id,
+            user_id: source_user.id,
+            target_id: target_user.id,
         })
-        .await;
+        .await?;
 
-    if response.is_err() {
-        return Err(response.unwrap_err());
-    }
-    return Ok(());
+    return Ok(response);
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -44,33 +67,43 @@ pub struct FriendData {
     pub username: String,
 }
 
-pub async fn show_pending(username: String) -> Result<Vec<FriendData>, String> {
-    let client = db::create_client().await.unwrap();
+pub async fn show_pending(username: String) -> Result<Vec<FriendData>, FriendServiceError> {
+    let db = db::create_client().await.unwrap();
+    let user_query = UserQuery { db: db.clone() };
+    let friend_query = FriendQuery { db: db.clone() };
 
-    let user = &User::get_user_by_username(username).await;
+    let user = user_query
+        .get_by_id(username)
+        .await
+        .map_err(FriendServiceError::DatabaseError)?
+        .ok_or(FriendServiceError::Unexpected)?;
 
-    if user.body.is_none() {
-        return Err("Unexpected error! Please try again later.".to_string());
-    }
-
-    let friend = Friend { client };
-
-    let pending_requests = friend
-        .get_pending_requests(user.body.as_ref().unwrap().id.clone())
-        .await;
+    let pending_requests = friend_query
+        .get_pending_requests(user.id.clone())
+        .await
+        .map_err(FriendServiceError::DatabaseError)?;
 
     let mut pending_requests_info: Vec<FriendData> = vec![];
 
-    for request in &pending_requests {
-        let pending_friend = User::get_user_by_id(request.user_id.clone()).await;
+    for request in pending_requests {
+        let pending_friend = user_query
+            .get_by_id(request.user_id)
+            .await
+            .map_err(FriendServiceError::DatabaseError)?;
 
-        if pending_friend.body.is_some() {
-            let full_pending_friend_info = pending_friend.body.unwrap();
+        if pending_friend.is_some() {
+            let full_pending_friend_info = pending_friend.unwrap();
             let pending_friend_info = FriendData {
                 id: full_pending_friend_info.id,
                 username: full_pending_friend_info.username,
             };
             pending_requests_info.push(pending_friend_info)
+        } else {
+            // Possibly remove the user from your friend in the future
+            println!(
+                "One of your pending friend doesn't exist anymore: {:#?}",
+                pending_friend
+            );
         }
     }
 
@@ -80,37 +113,42 @@ pub async fn show_pending(username: String) -> Result<Vec<FriendData>, String> {
 pub async fn accept_request(
     source_username: String,
     target_username: String,
-) -> Result<Vec<FriendData>, &'static str> {
-    let client = db::create_client().await.unwrap();
+) -> Result<FriendData, FriendServiceError> {
+    let db = db::create_client().await.unwrap();
+    let user_query = UserQuery { db: db.clone() };
+    let friend_query = FriendQuery { db: db.clone() };
 
-    let user = User::get_user_by_username(source_username).await;
-    let target_user = User::get_user_by_username(target_username).await;
+    let user = user_query
+        .get_by_username(source_username)
+        .await
+        .map_err(FriendServiceError::DatabaseError)?
+        .ok_or(FriendServiceError::Unexpected)?;
 
-    if user.body.is_none() {
-        return Err("Unexpected error! Please try again later.");
-    }
+    let target_user = user_query
+        .get_by_username(target_username)
+        .await
+        .map_err(FriendServiceError::DatabaseError)?
+        .ok_or(FriendServiceError::Unexpected)?;
 
-    if target_user.body.is_none() {
-        return Err("Unexpected error! Please try again later.");
-    }
-
-    let friend = Friend { client };
-
-    let accept_request = friend
+    let accept_request = friend_query
         .accept_request(
             &Relation {
-                user_id: user.body.as_ref().unwrap().id.to_string(),
-                target_id: target_user.body.unwrap().id,
+                user_id: user.id.clone(),
+                target_id: target_user.id,
             },
-            user.body.as_ref().unwrap().id.to_string(),
+            user.id,
         )
-        .await;
+        .await?;
+    let accepted_model = user_query
+        .get_by_id(accept_request.user_id)
+        .await
+        .map_err(FriendServiceError::DatabaseError)?
+        .ok_or(FriendServiceError::NotFound)?;
 
-    if accept_request.is_err() {
-        return Err("Unexpected error! Please try again later.");
-    }
+    let accepted_friend = FriendData {
+        id: accepted_model.id,
+        username: accepted_model.username,
+    };
 
-    let pending_requests_info: Vec<FriendData> = vec![];
-
-    return Ok(pending_requests_info);
+    return Ok(accepted_friend);
 }

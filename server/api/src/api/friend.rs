@@ -82,33 +82,39 @@ struct AcceptRequest {
     source_username: String,
     target_username: String,
 }
+
+#[derive(Deserialize, Serialize, Debug)]
+struct AcceptResponse {
+    success: bool,
+    error_message: String,
+    friend: Option<FriendData>,
+}
 #[post("/accept")]
 async fn accept(data: web::Json<AcceptRequest>) -> impl Responder {
     let accept_request_result =
         accept_request(data.0.source_username, data.0.target_username).await;
-    return HttpResponse::NotFound().json(json!({}));
 
-    // let show_pending = show_pending(data.0.username).await;
-    // println!("PENDING FRIENDS: {:#?}", show_pending);
+    println!("ACCEPTING FRIEND: {:#?}", accept_request_result);
 
-    // match show_pending {
-    //     Ok(pending_friends) => {
-    //         let response = ShowPendingResponse {
-    //             success: true,
-    //             error_message: "".to_string(),
-    //             friends: pending_friends,
-    //         };
-    //         return HttpResponse::Ok().json(json!(response));
-    //     }
-    //     Err(_err) => {
-    //         let response = ShowPendingResponse {
-    //             success: false,
-    //             error_message: "Hm, didn't works. You might not exist!".to_string(),
-    //             friends: vec![],
-    //         };
-    //         return HttpResponse::NotFound().json(json!(response));
-    //     }
-    // }
+    match accept_request_result {
+        Ok(accepted_request) => {
+            let response = AcceptResponse {
+                success: true,
+                error_message: "".to_string(),
+                friend: Some(accepted_request),
+            };
+            return HttpResponse::Ok().json(json!(response));
+        }
+        Err(err) => {
+            println!("Error accepting friend: {:#?}", err);
+            let response = AcceptResponse {
+                success: false,
+                error_message: "Hm, didn't works. You might not exist!".to_string(),
+                friend: None,
+            };
+            return HttpResponse::NotFound().json(json!(response));
+        }
+    }
 }
 
 #[post("/delete")]
