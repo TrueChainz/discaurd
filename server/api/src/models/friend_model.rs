@@ -77,7 +77,11 @@ impl FriendQuery {
         let pending_requests = Friends::find()
             .filter(
                 Condition::all()
-                    .add(Column::FriendId.eq(user_id))
+                    .add(
+                        Condition::any()
+                            .add(Column::UserId.eq(user_id.clone()))
+                            .add(Column::FriendId.eq(user_id.clone())),
+                    )
                     .add(Column::Status.eq(Status::Pending)),
             )
             .all(&self.db)
