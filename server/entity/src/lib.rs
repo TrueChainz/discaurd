@@ -3,5 +3,4 @@
 pub mod prelude;
 
 pub mod friends;
-pub mod sea_orm_active_enums;
 pub mod users;
