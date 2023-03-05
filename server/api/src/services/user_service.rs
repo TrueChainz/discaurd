@@ -44,7 +44,7 @@ pub async fn register_user(data: RegisterUser) -> Result<UserInfo, UserServiceEr
         .await
         .map_err(UserServiceError::DatabaseError)?;
 
-    let user = UserQuery { db };
+    let user_query = UserQuery { db };
 
     let body = UserBody {
         id: Uuid::new_v4().to_string(),
@@ -53,7 +53,7 @@ pub async fn register_user(data: RegisterUser) -> Result<UserInfo, UserServiceEr
         password: hash_string(data.password.as_str()),
     };
 
-    let does_exist = user
+    let does_exist = user_query
         .does_exist(&body)
         .await
         .map_err(UserServiceError::DatabaseError)?;
@@ -61,14 +61,14 @@ pub async fn register_user(data: RegisterUser) -> Result<UserInfo, UserServiceEr
         return Err(UserServiceError::AlreadyExists);
     }
 
-    let insert_response = user
+    let insert_response = user_query
         .register(&body)
         .await
         .map_err(UserServiceError::DatabaseError)?;
 
     return Ok(UserInfo {
-        id: body.id,
-        username: body.username,
+        id: insert_response.id,
+        username: insert_response.username,
     });
 }
 
@@ -77,9 +77,9 @@ pub async fn login_user(data: LoginUser) -> Result<UserInfo, UserServiceError> {
         .await
         .map_err(UserServiceError::DatabaseError)?;
 
-    let user = UserQuery { db };
+    let user_query = UserQuery { db };
 
-    let body = user
+    let body = user_query
         .get_by_username(data.username)
         .await
         .map_err(UserServiceError::DatabaseError)?
