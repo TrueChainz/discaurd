@@ -55,7 +55,6 @@ struct ShowPendingResponse {
 #[get("/pending")]
 async fn pending(data: web::Query<ShowPendingRequest>) -> impl Responder {
     let show_pending = show_pending(data.0.username).await;
-    println!("PENDING FRIENDS: {:#?}", show_pending);
 
     match show_pending {
         Ok(pending_friends) => {
