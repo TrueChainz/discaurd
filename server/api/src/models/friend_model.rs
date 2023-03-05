@@ -1,6 +1,8 @@
 use ::entity::friends::{ActiveModel, Column, Model, Status};
 use ::entity::prelude::Friends;
+use chrono::Local;
 use sea_orm::*;
+use uuid::Uuid;
 
 use crate::services::friend_service::FriendServiceError;
 
@@ -25,13 +27,13 @@ pub struct FriendQuery {
 
 impl FriendQuery {
     pub async fn add_friend(&self, data: &Relation) -> Result<Model, FriendServiceError> {
-        let mut active_model = ActiveModel {
-            ..Default::default()
+        let active_model = ActiveModel {
+            id: ActiveValue::Set(Uuid::new_v4().to_string()),
+            user_id: ActiveValue::Set(data.user_id.clone()),
+            friend_id: ActiveValue::Set(data.target_id.clone()),
+            status: ActiveValue::Set(Status::Pending),
+            submitted_at: ActiveValue::Set(Local::now().naive_utc()),
         };
-
-        active_model.user_id = ActiveValue::Set(data.user_id.clone());
-        active_model.friend_id = ActiveValue::Set(data.target_id.clone());
-        active_model.status = ActiveValue::Set(Status::Pending);
 
         let friend_model = active_model
             .insert(&self.db)
