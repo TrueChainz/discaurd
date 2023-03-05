@@ -1,5 +1,3 @@
-// use crate::prisma::{self, PrismaClient};
-// use prisma_client_rust::NewClientError;
 use dotenv::dotenv;
 use sea_orm::{Database, DatabaseConnection, DbErr};
 
