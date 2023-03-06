@@ -1,4 +1,5 @@
 use anyhow::Result;
+use entity::users::Model;
 use sea_orm::DbErr;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -62,9 +63,17 @@ pub async fn add_friend(
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+pub enum FriendStatus {
+    Incoming,
+    Outgoing,
+    Friend,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
 pub struct FriendData {
     pub id: String,
     pub username: String,
+    pub status: FriendStatus,
 }
 
 pub async fn show_pending(username: String) -> Result<Vec<FriendData>, FriendServiceError> {
@@ -73,7 +82,7 @@ pub async fn show_pending(username: String) -> Result<Vec<FriendData>, FriendSer
     let friend_query = FriendQuery { db: db.clone() };
 
     let user = user_query
-        .get_by_id(username)
+        .get_by_username(username)
         .await
         .map_err(FriendServiceError::DatabaseError)?
         .ok_or(FriendServiceError::Unexpected)?;
@@ -84,18 +93,32 @@ pub async fn show_pending(username: String) -> Result<Vec<FriendData>, FriendSer
         .map_err(FriendServiceError::DatabaseError)?;
 
     let mut pending_requests_info: Vec<FriendData> = vec![];
+    println!("{:#?}", pending_requests);
 
     for request in pending_requests {
-        let pending_friend = user_query
-            .get_by_id(request.user_id)
-            .await
-            .map_err(FriendServiceError::DatabaseError)?;
+        let pending_friend: Option<Model>;
+        let friend_status: FriendStatus;
+
+        if request.user_id == user.id {
+            friend_status = FriendStatus::Outgoing;
+            pending_friend = user_query
+                .get_by_id(request.friend_id)
+                .await
+                .map_err(FriendServiceError::DatabaseError)?;
+        } else {
+            friend_status = FriendStatus::Incoming;
+            pending_friend = user_query
+                .get_by_id(request.friend_id)
+                .await
+                .map_err(FriendServiceError::DatabaseError)?;
+        }
 
         if pending_friend.is_some() {
             let full_pending_friend_info = pending_friend.unwrap();
             let pending_friend_info = FriendData {
                 id: full_pending_friend_info.id,
                 username: full_pending_friend_info.username,
+                status: friend_status,
             };
             pending_requests_info.push(pending_friend_info)
         } else {
@@ -148,6 +171,7 @@ pub async fn accept_request(
     let accepted_friend = FriendData {
         id: accepted_model.id,
         username: accepted_model.username,
+        status: FriendStatus::Friend,
     };
 
     return Ok(accepted_friend);

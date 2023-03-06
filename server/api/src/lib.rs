@@ -4,7 +4,6 @@ use api::api_config;
 
 pub use sea_orm;
 
-mod actors;
 mod api;
 mod db;
 mod helper;
