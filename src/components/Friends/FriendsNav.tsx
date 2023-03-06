@@ -4,13 +4,15 @@ import { FaUserFriends } from "react-icons/fa";
 import dynamic from "next/dynamic";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { signOut, useSession } from "next-auth/react";
+import { useFriendStore, ViewState } from "../../store/friendStore";
 const AddFriendModal = dynamic(() => import("../AddFriendModal"), {
   ssr: false,
 });
 
-const friendNavList = ["Online", "All", "Pending"];
+const friendNavList = [ViewState.Online, ViewState.All, ViewState.Pending];
+
 const cvaFriendNav = cva(
-  "btn-ghost btn-sm btn rounded-lg normal-case hover:bg-zinc-600 mx-2",
+  "btn-ghost btn-sm btn rounded-lg  hover:bg-zinc-600 mx-2 capitalize",
   {
     variants: {
       selected: {
@@ -27,37 +29,27 @@ const cvaFriendNav = cva(
 );
 
 function FriendsNav() {
-  const [activeNav, setActiveNav] = useState("Online");
   const [modalActive, setModalActive] = useState(false);
   const [parent] = useAutoAnimate(/* optional config */);
   const { data: session } = useSession();
 
+  const { active, setActive } = useFriendStore((state) => state);
+
   return (
     <div className="flex-1 lg:flex" ref={parent as LegacyRef<HTMLDivElement>}>
-      <ul
-        className="navbar-start menu menu-horizontal mx-4 min-w-fit flex-shrink-0 flex-nowrap px-1  lg:flex
-        "
-      >
-        {friendNavList.map((nav, i) => {
+      <ul className="navbar-start menu menu-horizontal mx-4 min-w-fit flex-shrink-0 flex-nowrap px-1 lg:flex ">
+        {friendNavList.map((nav) => {
           return (
             <li
-              className={cvaFriendNav({
-                selected: nav === activeNav,
-                isAdd: false,
-              })}
-              onClick={() => {
-                setActiveNav(nav);
-              }}
+              className={cvaFriendNav({ selected: nav === active })}
+              onClick={() => setActive(nav)}
             >
               {nav}
             </li>
           );
         })}
         <label
-          className={cvaFriendNav({
-            selected: "Add Friend" === activeNav,
-            isAdd: true,
-          })}
+          className={cvaFriendNav({ isAdd: true })}
           onClick={() => setModalActive(true)}
         >
           Add Friend
@@ -71,10 +63,7 @@ function FriendsNav() {
       )}
       <ul className="ml-auto ">
         <li
-          className={cvaFriendNav({
-            selected: "Add Friend" === activeNav,
-            isLogout: true,
-          })}
+          className={cvaFriendNav({ isLogout: true })}
           onClick={() => signOut()}
         >
           Sign Out

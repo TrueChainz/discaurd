@@ -12,9 +12,8 @@ export default NextAuth({
       if (params.user) return true;
       return false;
     },
-    jwt: async ({ token, user }) => {
-      console.log("token callback jwt: ", token);
-      console.log("user in jwt: ");
+    jwt: async ({ token, user, account }) => {
+      user = { id: "123", emailVerified: new Date() };
       if (user) {
         token.username = user.username;
       }
@@ -28,10 +27,6 @@ export default NextAuth({
     strategy: "jwt",
   },
   providers: [
-    // GithubProvider({
-    //   clientId: process.env.GITHUB_ID,
-    //   clientSecret: process.env.GITHUB_SECRET,
-    // }),
     CredentialsProvider({
       async authorize(credentials, req) {
         try {

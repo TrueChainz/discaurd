@@ -79,6 +79,10 @@ export interface TGenericResponse {
   error_message: string;
 }
 
+export interface TFriend extends TUser {
+  status: "Incoming" | "Outgoing" | "Friend";
+}
+
 export async function sendFriendRequest(
   data: TFriendRequest
 ): Promise<TGenericResponse> {
@@ -89,11 +93,9 @@ export async function sendFriendRequest(
         target_username: data.target_username,
       })
       .then((response) => {
-        console.log(response);
         return response.data;
       });
 
-    console.log("Sending Friend Request", response);
     if (response.success == false)
       throw new Error("Unexpected error! Please try again later.");
 
@@ -102,8 +104,44 @@ export async function sendFriendRequest(
     if (!error.response?.data?.error_message) {
       throw new Error("Unexpected error! Please try again later.");
     }
-    console.log(error.response);
 
     throw new Error(error.response.data.error_message);
+  }
+}
+
+interface TPendingFriends extends TGenericResponse {
+  friends: TFriend[];
+}
+
+export async function showPendingFriends(
+  username: string
+): Promise<TPendingFriends> {
+  try {
+    let response = await axiosInstance
+      .get<TPendingFriends>("http://127.0.0.1:3000/api/friend/pending", {
+        params: {
+          username,
+        },
+      })
+      .then((response) => {
+        return response.data;
+      });
+
+    if (response.success == false)
+      return {
+        error_message: "Unexpected error! Please try again later.",
+        friends: [],
+        success: true,
+      };
+
+    return response;
+  } catch (error) {
+    return {
+      error_message:
+        error.response?.data?.error_message ??
+        "Unexpected error! Please try again later.",
+      friends: [],
+      success: false,
+    };
   }
 }
