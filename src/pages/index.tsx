@@ -1,4 +1,5 @@
 import { cva } from "class-variance-authority";
+import { useSession } from "next-auth/react";
 import { useState } from "react";
 import { FaUserFriends } from "react-icons/fa";
 import Friends from "../components/Friends/Friends";
@@ -27,6 +28,8 @@ const friendDirect = cva(
 
 function App() {
   const [selectedNavigation, setSelectedNavigation] = useState();
+  const { data: session, status } = useSession();
+  console.log(session);
   return (
     <div className="flex h-screen">
       <section className="navbar-start h-full w-60 flex-shrink-0 bg-base-300 p-2">

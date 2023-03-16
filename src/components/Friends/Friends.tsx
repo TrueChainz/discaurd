@@ -1,6 +1,4 @@
 import { FaUserFriends } from "react-icons/fa";
-import dynamic from "next/dynamic";
-import { useAutoAnimate } from "@formkit/auto-animate/react";
 import FriendsNav from "./FriendsNav";
 import { useFriendStore, ViewState } from "../../store/friendStore";
 import { TFriend } from "../../lib/services";
@@ -39,11 +37,11 @@ function FriendRow(props: TFriendRowProps) {
             </div>
           </>
         );
-
       default:
         return null;
     }
   };
+
   return (
     <div className="my-2 flex cursor-pointer items-center justify-start rounded-md bg-base-300 py-2 px-2 normal-case hover:bg-base-200">
       <div className="mx-2 h-8 w-8 rounded-full bg-base-100"></div>

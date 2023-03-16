@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { signOut, useSession } from "next-auth/react";
 import { useFriendStore, ViewState } from "../../store/friendStore";
-const AddFriendModal = dynamic(() => import("../AddFriendModal"), {
+const AddFriendModal = dynamic(() => import("../Modals/AddFriendModal"), {
   ssr: false,
 });
 

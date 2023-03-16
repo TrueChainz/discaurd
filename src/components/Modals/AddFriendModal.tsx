@@ -2,12 +2,14 @@ import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { sendFriendRequest } from "../lib/services";
+import { sendFriendRequest } from "../../lib/services";
+import { useSession } from "next-auth/react";
 
-interface Props {
-  setModalActive: Dispatch<SetStateAction<boolean>>;
-  username: string;
-}
+type TAddFriendProps = {};
+export type TAddFriendModal = {
+  selected: "AddFriend";
+  data: TAddFriendProps;
+};
 
 const FormSchema = z.object({
   target_username: z
@@ -17,8 +19,9 @@ const FormSchema = z.object({
 
 type FormSchemaType = z.infer<typeof FormSchema>;
 
-const AddFriendModal = ({ setModalActive, username }: Props) => {
+const AddFriendModal = () => {
   const [requestError, setRequestError] = useState("");
+  const { data: session, status } = useSession();
   const {
     handleSubmit,
     formState: { errors, isSubmitSuccessful },
@@ -39,7 +42,7 @@ const AddFriendModal = ({ setModalActive, username }: Props) => {
     resetError();
     try {
       const payload = {
-        source_username: username,
+        source_username: session.user.username,
         target_username: data.target_username,
       };
       const response = await sendFriendRequest(payload);
@@ -91,7 +94,6 @@ const AddFriendModal = ({ setModalActive, username }: Props) => {
           <button
             className="btn-outline btn-accent btn-sm btn normal-case"
             type="button"
-            onClick={() => setModalActive(false)}
           >
             Back
           </button>
