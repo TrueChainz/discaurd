@@ -1,0 +1,23 @@
+_id: req_8c6a908b3f8a4870a5ff6155e4a9b123
+type: Request
+parentId: wrk_cd4c08077c944f6ebf281698d06be21d
+modified: 1694970259689
+created: 1694970250871
+url: ""
+name: Rename
+description: ""
+method: GET
+body: {}
+parameters: []
+headers:
+  - name: User-Agent
+    value: insomnia/2023.5.8
+authentication: {}
+metaSortKey: -1694970250871
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global
