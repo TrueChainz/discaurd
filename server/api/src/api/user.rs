@@ -33,10 +33,11 @@ struct LoginResponse {
 
 #[post("/register")]
 async fn register(data: web::Json<RegisterRequest>) -> impl Responder {
+    let req_body = data.into_inner();
     let register_result = register_user(RegisterUser {
-        email: data.0.email,
-        username: data.0.username,
-        password: data.0.password,
+        email: req_body.email,
+        username: req_body.username,
+        password: req_body.password,
     })
     .await;
 
@@ -90,5 +91,5 @@ async fn login(data: web::Json<LoginRequest>) -> impl Responder {
 }
 
 pub fn user_config(cfg: &mut web::ServiceConfig) {
-    cfg.service(web::scope("/user").service(register).service(login));
+    cfg.service(web::scope("/users").service(register).service(login));
 }

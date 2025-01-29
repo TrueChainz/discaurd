@@ -1,5 +1,5 @@
 use argon2::Config;
-
+/// Hello
 pub fn hash_string(input: &str) -> String {
     let salt = b"secret_salt";
     argon2::hash_encoded(input.as_ref(), salt, &Config::default()).unwrap()
